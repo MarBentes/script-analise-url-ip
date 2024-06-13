@@ -22,6 +22,7 @@ Este script, criado por Marcelo Bentes, é projetado para analisar URLs e endere
 
 - Python 3.x
 - Biblioteca `requests`: Você pode instalá-la usando `pip install requests`.
+- Biblioteca `pandas openpyxl`: Você pode instalá-la usando `pip install pandas openpyxl`
 
 ### Como Usar
 
@@ -79,7 +80,7 @@ Resultados ainda não disponíveis. Tentando novamente em 5 segundos...
   - Nenhuma detecção encontrada.
 --------------------
 
-Resultados salvos em analysis_results.csv
+Resultados salvos em resultados_analise.xlsx
 
 ### Notas
 Certifique-se de ter chaves de API válidas para URLScan, VirusTotal e IPInfo.
