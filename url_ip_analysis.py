@@ -1,11 +1,12 @@
 import requests
 import time
 import re
+import pandas as pd
 
 # Substitua pelas suas chaves de API
-URLSCAN_API_KEY = 'URLSCAN_API_KEY'
-VIRUSTOTAL_API_KEY = 'VIRUSTOTAL_API_KEY'
-IPINFO_API_KEY = 'IPINFO_API_KEY'
+URLSCAN_API_KEY = 'c0dbf551-db24-43f0-a316-d761e1c70f25'
+VIRUSTOTAL_API_KEY = '6472d60e7eef7de7fa1230b682e5430bacca924cb55baf51ad3d10ec55018cc9'
+IPINFO_API_KEY = '2c2a45c63aa5d6'
 
 URLSCAN_ENDPOINT = 'https://urlscan.io/api/v1/scan/'
 URLSCAN_RESULT_ENDPOINT = 'https://urlscan.io/api/v1/result/'
@@ -156,6 +157,10 @@ def check_url_protocol(url):
         print(f"Erro ao verificar o protocolo da URL: {e}")
         return False, url
 
+def save_results_to_excel(results, filename):
+    df = pd.DataFrame(results)
+    df.to_excel(filename, index=False)
+
 def main():
     input_value = input("Digite a URL ou IP que você deseja analisar: ")
     
@@ -165,6 +170,30 @@ def main():
         positives, total, relevant_verdicts, report_data, reputation, harmless, malicious, suspicious = get_virustotal_verdict(final_ip, is_url=False)
         
         if positives is not None:
+            results = {
+                'IP': final_ip,
+                'Geolocalização': geo_data['location'],
+                'Hostname': geo_data['hostname'],
+                'Contato de Abuso': geo_data['abuse_contact'],
+                'ASN': report_data.get('asn', 'ASN não encontrado'),
+                'Organizações': report_data.get('as_owner', 'Organização não encontrada'),
+                'País': report_data.get('country', 'País não encontrado'),
+                'VirusTotal Positivos': f"{positives}/{total}",
+                'Reputação': reputation,
+                'Harmless': harmless,
+                'Malicious': malicious,
+                'Suspicious': suspicious
+            }
+
+            # Adicionar os resultados relevantes das verificações aos resultados
+            detections = []
+            for engine, result in relevant_verdicts:
+                detections.append(f"{engine}: {result}")
+            results['Detecções'] = ', '.join(detections) if detections else 'Nenhuma detecção encontrada.'
+
+            # Salvar os resultados em um arquivo Excel
+            save_results_to_excel([results], 'resultados_analise.xlsx')
+
             print(f"\n---- Scan Results (IP) ----")
             print(f"* IP: {final_ip}")
             print(f"* Geolocalização: {geo_data['location']}")
@@ -180,10 +209,10 @@ def main():
             print(f"* Malicious: {malicious}")
             print(f"* Suspicious: {suspicious}")
             print("\n---- Results ----")
-            if relevant_verdicts:
+            if detections:
                 print("* Detecções:")
-                for engine, result in relevant_verdicts:
-                    print(f"  - {engine}: {result}")
+                for detection in detections:
+                    print(f"  - {detection}")
             else:
                 print("* Nenhuma detecção encontrada.")
             print(f"--------------------\n")
@@ -226,8 +255,42 @@ def main():
             positives, total, relevant_verdicts, report_data, reputation, harmless, malicious, suspicious = get_virustotal_verdict(final_url)
             
             if verdict is not None and positives is not None:
+                results = {
+                    'URL': final_url,
+                    'Protocolo': 'HTTPS' if is_https else 'HTTP',
+                    'IP': ip,
+                    'Status': status,
+                    'Título': title,
+                    'Domínio': domain,
+                    'Servidor': server,
+                    'Tipo MIME': mime_type,
+                    'Geolocalização': geo_data['location'],
+                    'Hostname': geo_data['hostname'],
+                    'Contato de Abuso': geo_data['abuse_contact'],
+                    'ASN': report_data.get('asn', 'ASN não encontrado'),
+                    'Organizações': report_data.get('as_owner', 'Organização não encontrada'),
+                    'País': report_data.get('country', 'País não encontrado'),
+                    'URLScan Veredito': 'Malicioso' if verdict < 0 else 'Não Malicioso',
+                    'VirusTotal Positivos': f"{positives}/{total}",
+                    'Reputação': reputation,
+                    'Harmless': harmless,
+                    'Malicious': malicious,
+                    'Suspicious': suspicious
+                }
+
+                # Adicionar os resultados relevantes das verificações aos resultados
+                detections = []
+                for engine, result in relevant_verdicts:
+                    detections.append(f"{engine}: {result}")
+                results['Detecções'] = ', '.join(detections) if detections else 'Nenhuma detecção encontrada.'
+                results['Indicadores de Ameaças'] = ', '.join(threat_indicators) if threat_indicators else 'Nenhum'
+
+                # Salvar os resultados em um arquivo Excel
+                save_results_to_excel([results], 'resultados_analise.xlsx')
+
                 print(f"\n---- Scan Results (URLScan) ----")
                 print(f"* URL: {final_url}")
+                print(f"* Protocolo: {'HTTPS' if is_https else 'HTTP'}")
                 print(f"* IP: {ip}")
                 print(f"* Status: {status}")
                 print(f"* Título: {title}")
@@ -249,10 +312,10 @@ def main():
                 print(f"* Malicious: {malicious}")
                 print(f"* Suspicious: {suspicious}")
                 print("\n---- Results ----")
-                if relevant_verdicts:
+                if detections:
                     print("* Detecções:")
-                    for engine, result in relevant_verdicts:
-                        print(f"  - {engine}: {result}")
+                    for detection in detections:
+                        print(f"  - {detection}")
                 else:
                     print("* Nenhuma detecção encontrada.")
                 print(f"--------------------\n")
@@ -265,3 +328,4 @@ if __name__ == "__main__":
     main()
 
 # ### Script criado por Marcelo Bentes ###
+
