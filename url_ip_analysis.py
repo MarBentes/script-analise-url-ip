@@ -3,9 +3,9 @@ import time
 import re
 
 # Substitua pelas suas chaves de API
-URLSCAN_API_KEY = 'c0dbf551-db24-43f0-a316-d761e1c70f25'
-VIRUSTOTAL_API_KEY = '6472d60e7eef7de7fa1230b682e5430bacca924cb55baf51ad3d10ec55018cc9'
-IPINFO_API_KEY = '2c2a45c63aa5d6'
+URLSCAN_API_KEY = 'URLSCAN_API_KEY'
+VIRUSTOTAL_API_KEY = 'VIRUSTOTAL_API_KEY'
+IPINFO_API_KEY = 'IPINFO_API_KEY'
 
 URLSCAN_ENDPOINT = 'https://urlscan.io/api/v1/scan/'
 URLSCAN_RESULT_ENDPOINT = 'https://urlscan.io/api/v1/result/'
