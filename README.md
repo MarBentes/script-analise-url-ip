@@ -2,7 +2,7 @@
 
 ### Descrição
 
-Este script, criado por Marcelo Bentes, é projetado para analisar URLs e endereços IP usando múltiplas APIs. Ele verifica a reputação, status de segurança e geolocalização das URLs ou IPs fornecidos. Os resultados são exibidos no console e salvos em um arquivo CSV para revisão posterior.
+Este script, criado por Marcelo Bentes, é projetado para analisar URLs e endereços IP usando múltiplas APIs. Ele verifica a reputação, status de segurança e geolocalização das URLs ou IPs fornecidos. Os resultados são exibidos no console e salvos em um arquivo .xls para revisão posterior.
 
 ### Funcionalidades
 
@@ -10,7 +10,7 @@ Este script, criado por Marcelo Bentes, é projetado para analisar URLs e endere
 - **Análise de Reputação e Segurança**: Utiliza as APIs URLScan e VirusTotal para verificar a reputação e o status de segurança de URLs e IPs.
 - **Informações de Geolocalização**: Recupera informações de geolocalização usando a API do IPInfo.
 - **Indicadores de Ameaça**: Coleta e exibe indicadores de ameaça do URLScan.
-- **Exportação para CSV**: Salva os resultados da análise em um arquivo CSV para revisão e manutenção de registros.
+- **Exportação para xls**: Salva os resultados da análise em um arquivo xls para revisão e manutenção de registros.
 
 ### APIs Utilizadas
 
@@ -34,8 +34,9 @@ Este script, criado por Marcelo Bentes, é projetado para analisar URLs e endere
 2. Instalar as Bibliotecas Requeridas:
 
    pip install requests
+   pip install pandas openpyxl
 
-3. Substituir as Chaves de API:
+4. Substituir as Chaves de API:
 
    Abra o arquivo do script e substitua as chaves de API pelos seus valores reais:
 
