@@ -1,5 +1,3 @@
-# ### Script criado por Marcelo Bentes ###
-
 import requests
 import time
 import re
@@ -17,13 +15,12 @@ VIRUSTOTAL_REPORT_ENDPOINT = 'https://www.virustotal.com/vtapi/v2/url/report'
 IPINFO_ENDPOINT = 'https://ipinfo.io/'
 
 def is_valid_ip(address):
-    # Verificar se a entrada é um endereço IP válido
     ip_pattern = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
     return ip_pattern.match(address) is not None
 
 def get_urlscan_verdict(scan_id):
     result_url = f"{URLSCAN_RESULT_ENDPOINT}{scan_id}/"
-    for _ in range(10):  # Tentar 10 vezes
+    for _ in range(10):
         response = requests.get(result_url)
         if response.status_code == 200:
             result_data = response.json()
@@ -55,7 +52,7 @@ def get_ip_abuse_contact(ip):
     return 'Contato de abuso não encontrado'
 
 def get_ip_geolocation(ip):
-    response = requests.get(f"{IPINFO_ENDPOINT}{ip}", params={'token': IPINFO_API_KEY})
+    response = requests.get(f"{IPINFO_ENDPOINT}/{ip}", params={'token': IPINFO_API_KEY})
     if response.status_code == 200:
         geo_data = response.json()
         city = geo_data.get('city', 'Cidade não encontrada')
@@ -80,43 +77,73 @@ def get_virustotal_verdict(resource, is_url=True):
     headers = {
         'x-apikey': VIRUSTOTAL_API_KEY
     }
-    scan_params = {'apikey': VIRUSTOTAL_API_KEY, 'url': resource} if is_url else {'apikey': VIRUSTOTAL_API_KEY, 'ip': resource}
-    response = requests.post(VIRUSTOTAL_SCAN_ENDPOINT, data=scan_params)
+    report_params = {'apikey': VIRUSTOTAL_API_KEY, 'resource': resource}
+    response = requests.get(VIRUSTOTAL_REPORT_ENDPOINT, params=report_params)
     if response.status_code == 200:
-        scan_data = response.json()
-        scan_id = scan_data.get('scan_id')
-        time.sleep(15)  # Esperar para permitir que a análise seja processada
+        report_data = response.json()
+        positives = report_data.get('positives', 'Positivos não encontrados')
+        total = report_data.get('total', 'Total não encontrado')
+        scans = report_data.get('scans', {})
+        relevant_verdicts = [(engine, details['result']) for engine, details in scans.items() if details['detected']]
+        reputation = report_data.get('reputation', 'Reputação não encontrada')
 
-        report_params = {'apikey': VIRUSTOTAL_API_KEY, 'resource': resource, 'scan': 1}
-        for _ in range(10):  # Tentar 10 vezes
-            response = requests.get(VIRUSTOTAL_REPORT_ENDPOINT, params=report_params)
-            if response.status_code == 200:
-                report_data = response.json()
-                positives = report_data.get('positives', 'Positivos não encontrados')
-                total = report_data.get('total', 'Total não encontrado')
-                scans = report_data.get('scans', {})
-                relevant_verdicts = [(engine, details['result']) for engine, details in scans.items() if details['detected']]
-                reputation = report_data.get('reputation', 'Reputação não encontrada')
+        if isinstance(report_data.get('total'), dict):
+            harmless = report_data['total'].get('harmless', 'Não encontrado')
+            malicious = report_data['total'].get('malicious', 'Não encontrado')
+            suspicious = report_data['total'].get('suspicious', 'Não encontrado')
+        else:
+            harmless = 'Não encontrado'
+            malicious = 'Não encontrado'
+            suspicious = 'Não encontrado'
 
-                # Se 'total' não for um dicionário, inicializar com valores padrão
-                if isinstance(report_data.get('total'), dict):
-                    harmless = report_data['total'].get('harmless', 'Não encontrado')
-                    malicious = report_data['total'].get('malicious', 'Não encontrado')
-                    suspicious = report_data['total'].get('suspicious', 'Não encontrado')
-                else:
-                    harmless = 'Não encontrado'
-                    malicious = 'Não encontrado'
-                    suspicious = 'Não encontrado'
+        return positives, total, relevant_verdicts, report_data, reputation, harmless, malicious, suspicious
 
-                return positives, total, relevant_verdicts, report_data, reputation, harmless, malicious, suspicious
-            elif response.status_code == 204:
-                print("Resultados ainda não disponíveis. Tentando novamente em 5 segundos...")
-                time.sleep(5)
-            else:
-                print(f"Erro ao obter resultado do relatório. Código de status: {response.status_code}")
-                break
+    elif response.status_code == 204:
+        print("Resultados ainda não disponíveis. Tentando novamente em 5 segundos...")
+        time.sleep(5)
+
     else:
-        print(f"Erro ao iniciar a análise no VirusTotal. Código de status: {response.status_code}")
+        print("Relatório não encontrado, iniciando nova análise.")
+        scan_params = {'apikey': VIRUSTOTAL_API_KEY, 'url': resource} if is_url else {'apikey': VIRUSTOTAL_API_KEY, 'ip': resource}
+        response = requests.post(VIRUSTOTAL_SCAN_ENDPOINT, data=scan_params)
+        if response.status_code == 200:
+            scan_data = response.json()
+            if isinstance(scan_data, list) and not scan_data:
+                print("Lista vazia retornada pela API do VirusTotal")
+                return None, None, None, None, None, None, None, None
+
+            scan_id = scan_data.get('scan_id', 'N/A')
+            time.sleep(15)  # Esperar para permitir que a análise seja processada
+
+            report_params = {'apikey': VIRUSTOTAL_API_KEY, 'resource': resource, 'scan': 1}
+            for _ in range(10):
+                response = requests.get(VIRUSTOTAL_REPORT_ENDPOINT, params=report_params)
+                if response.status_code == 200:
+                    report_data = response.json()
+                    positives = report_data.get('positives', 'Positivos não encontrados')
+                    total = report_data.get('total', 'Total não encontrado')
+                    scans = report_data.get('scans', {})
+                    relevant_verdicts = [(engine, details['result']) for engine, details in scans.items() if details['detected']]
+                    reputation = report_data.get('reputation', 'Reputação não encontrada')
+
+                    if isinstance(report_data.get('total'), dict):
+                        harmless = report_data['total'].get('harmless', 'Não encontrado')
+                        malicious = report_data['total'].get('malicious', 'Não encontrado')
+                        suspicious = report_data['total'].get('suspicious', 'Não encontrado')
+                    else:
+                        harmless = 'Não encontrado'
+                        malicious = 'Não encontrado'
+                        suspicious = 'Não encontrado'
+
+                    return positives, total, relevant_verdicts, report_data, reputation, harmless, malicious, suspicious
+                elif response.status_code == 204:
+                    print("Resultados ainda não disponíveis. Tentando novamente em 5 segundos...")
+                    time.sleep(5)
+                else:
+                    print(f"Erro ao obter resultado do relatório. Código de status: {response.status_code}")
+                    break
+        else:
+            print(f"Erro ao iniciar a análise no VirusTotal. Código de status: {response.status_code}")
     return None, None, None, None, None, None, None, None
 
 def check_url_protocol(url):
