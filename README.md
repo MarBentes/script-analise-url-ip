@@ -74,11 +74,23 @@ Resultados ainda não disponíveis. Tentando novamente em 5 segundos...
 
 ---- Vereditos ----
 * URLScan: Não Malicioso (Score: 0)
-* VirusTotal: Positivos: 0/70
+* VirusTotal: Positivos: 13/95
 
 ---- Results ----
 * Detecções:
-  - Nenhuma detecção encontrada.
+  - Abusix: malicious site
+  - Antiy-AVL: malicious site
+  - BitDefender: phishing site
+  - CRDF: malicious site
+  - Cluster25: malicious site
+  - Criminal IP: malicious site
+  - CyRadar: malicious site
+  - G-Data: phishing site
+  - GreenSnow: malicious site
+  - IPsum: malicious site
+  - Lionic: malicious site
+  - MalwareURL: malware site
+  - SOCRadar: malicious site
 --------------------
 
 Resultados salvos em resultados_analise.xlsx
